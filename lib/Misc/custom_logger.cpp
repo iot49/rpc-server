@@ -3,6 +3,6 @@
 
 int _log_vprintf(const char *fmt, va_list args)
 {
-    printf("LOG ");
+    printf("l");
     return vprintf(fmt, args);
 }
