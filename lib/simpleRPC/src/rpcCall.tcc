@@ -1,6 +1,7 @@
 #ifndef __SIMPLE_RPC_RPCCALL_TCC__
 #define __SIMPLE_RPC_RPCCALL_TCC__
 
+#include "message_types.h"
 #include "read.tcc"
 #include "tuple.tcc"
 #include "write.tcc"
@@ -22,7 +23,7 @@ template<class R, class... Tail, class... Args>
 void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
 
-  Serial.write(-1);  // indicate function result
+  Serial.write(RPC_RESPONSE);  // indicate function result
   _write(&data);
 }
 
@@ -37,7 +38,7 @@ template<class C, class P, class R, class... Tail, class... Args>
 void _call(void (*)(void), Tuple <C *, R (P::*)(Tail...)>t, Args&... args) {
   R data =(*t.head.*t.tail.head)(args...);
 
-  Serial.write(-1);  // indicate function result
+  Serial.write(RPC_RESPONSE);  // indicate function result
   _write(&data);
 }
 

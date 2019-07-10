@@ -105,7 +105,7 @@ void rpcInterface(Args... args) {
     command = Serial.read();
 
     if (command == _LIST_REQ) {
-      multiPrint(_PROTOCOL, _END_OF_STRING);
+      multiPrint(RPC_PROTOCOL, _PROTOCOL, _END_OF_STRING);
       multiPrint(_VERSION[0], _VERSION[1], _VERSION[2]);
       multiPrint(_hardwareDefs().c_str(), _END_OF_STRING);
       _describe(args...);

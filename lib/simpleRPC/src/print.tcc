@@ -40,12 +40,10 @@ size_t multiPrint(String &arg, Args... args) {
   return Serial.write(arg.c_str()) + multiPrint(args...);
 }
 
-/*
 // F() macro support.
 template<class... Args>
 size_t multiPrint(const __FlashStringHelper *arg, Args... args) {
   return Serial.print(arg) + multiPrint(args...);
 }
-*/
 
 #endif

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <stdint.h>
-#include "WString.h"
-#include "uart.h"
+#include <WString.h>
+#include <serial.h>
 
 typedef uint8_t byte;
 typedef bool boolean;
 
-extern Uart Serial;
+extern HardwareSerial Serial;

@@ -8,3 +8,6 @@
 .travis.yml
 .github
 .gitmodules
+.envrc
+.direnv
+OLD/
