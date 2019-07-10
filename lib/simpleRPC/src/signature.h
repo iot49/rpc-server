@@ -1,7 +1,7 @@
 #ifndef __SIMPLE_RPC_SIGNATURE_TCC__
 #define __SIMPLE_RPC_SIGNATURE_TCC__
 
-#include "types.tcc"
+#include "types.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"

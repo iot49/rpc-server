@@ -1,7 +1,7 @@
 #ifndef __SIMPLE_RPC_TUPLE_TCC__
 #define __SIMPLE_RPC_TUPLE_TCC__
 
-#include "helper.tcc"
+#include "helper.h"
 
 /*
  * Empty tuple.

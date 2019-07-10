@@ -1,3 +1,4 @@
 #pragma once
 
-void blink();
+void blink_task(void *pvParameter);
+

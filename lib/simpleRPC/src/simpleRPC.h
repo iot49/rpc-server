@@ -2,7 +2,7 @@
 #define __SIMPLE_RPC_H__
 
 #include "defs.h"
-#include "interface.tcc"
+#include "interface.h"
 
 byte _ping(byte data) {
   return data;

@@ -1,8 +1,8 @@
 #ifndef __SIMPLE_RPC_TYPES_TCC__
 #define __SIMPLE_RPC_TYPES_TCC__
 
-#include "tuple.tcc"
-#include "vector.tcc"
+#include "tuple.h"
+#include "vector.h"
 
 /*
  * Prototypes needed for recursive definitions.

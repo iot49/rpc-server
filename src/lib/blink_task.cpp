@@ -9,6 +9,7 @@
 static const char *TAG = "blink-task";
 
 const gpio_num_t BLINK_GPIO = GPIO_NUM_13;
+
 void blink_task(void *pvParameter)
 {
     /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
@@ -31,9 +32,4 @@ void blink_task(void *pvParameter)
         gpio_set_level(BLINK_GPIO, 1);
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
-}
-
-void blink()
-{
-    xTaskCreate(&blink_task, "blink_task", 4096, NULL, 5, NULL);
 }

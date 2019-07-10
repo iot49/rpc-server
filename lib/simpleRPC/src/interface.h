@@ -11,9 +11,9 @@
  *
  * TODO: Add support for multiple serial devices.
  */
-#include "print.tcc"
-#include "rpcCall.tcc"
-#include "signature.tcc"
+#include "print.h"
+#include "rpcCall.h"
+#include "signature.h"
 
 
 /**

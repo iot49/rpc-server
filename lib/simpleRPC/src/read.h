@@ -4,8 +4,8 @@
 #include <Arduino.h>
 
 #include "defs.h"
-#include "tuple.tcc"
-#include "vector.tcc"
+#include "tuple.h"
+#include "vector.h"
 
 /*
  * Prototypes needed for recursive definitions.

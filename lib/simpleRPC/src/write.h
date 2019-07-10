@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-#include "print.tcc"
-#include "tuple.tcc"
-#include "vector.tcc"
+#include "print.h"
+#include "tuple.h"
+#include "vector.h"
 
 /*
  * Prototypes needed for recursive definitions.

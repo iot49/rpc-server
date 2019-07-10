@@ -2,9 +2,9 @@
 #define __SIMPLE_RPC_RPCCALL_TCC__
 
 #include "message_types.h"
-#include "read.tcc"
-#include "tuple.tcc"
-#include "write.tcc"
+#include "read.h"
+#include "tuple.h"
+#include "write.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
