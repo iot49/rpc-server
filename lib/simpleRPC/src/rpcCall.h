@@ -1,7 +1,10 @@
 #ifndef __SIMPLE_RPC_RPCCALL_TCC__
 #define __SIMPLE_RPC_RPCCALL_TCC__
 
+#include "freertos/semphr.h"
 #include "message_types.h"
+#include "lib/locks.h"
+
 #include "read.h"
 #include "tuple.h"
 #include "write.h"
@@ -23,8 +26,13 @@ template<class R, class... Tail, class... Args>
 void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
 
-  Serial.write(RPC_RESPONSE);  // indicate function result
-  _write(&data);
+  {
+    //Lock tx("tx", tx_lock);
+    xSemaphoreTake(tx_lock, tx_timeout);
+    Serial.write(RPC_RESPONSE); // indicate function result
+    _write(&data);
+    xSemaphoreGive(tx_lock);
+  }
 }
 
 // Void function.
@@ -38,8 +46,13 @@ template<class C, class P, class R, class... Tail, class... Args>
 void _call(void (*)(void), Tuple <C *, R (P::*)(Tail...)>t, Args&... args) {
   R data =(*t.head.*t.tail.head)(args...);
 
-  Serial.write(RPC_RESPONSE);  // indicate function result
-  _write(&data);
+  {
+      //Lock tx("tx", tx_lock);
+      xSemaphoreTake(tx_lock, tx_timeout);
+      Serial.write(RPC_RESPONSE); // indicate function result
+      _write(&data);
+      xSemaphoreGive(tx_lock);
+  }
 }
 
 // Void class member function.
@@ -47,7 +60,6 @@ template<class C, class P, class... Tail, class... Args>
 void _call(void (*)(void), Tuple <C *, void (P::*)(Tail...)>t, Args&... args) {
   (*t.head.*t.tail.head)(args...);
 }
-
 
 /**
  * Collect parameters of a function from serial.

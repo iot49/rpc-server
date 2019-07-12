@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 
 #include "error.h"
 #include "simpleRPC.h"
@@ -13,18 +14,42 @@ static const char *TAG = "rpc";
 
 Network network;
 
+int inc(int i) {
+    return i+1;
+}
+
+void nothing() {
+
+}
+
 void rpc_task(void *pvParameter)
 {
+    // TODO: just spins, sucking up cpu cycles.
+    // FIX:  change simpleRPC.h to block on read().
+    //       FOR that, read() must block!
+    //       Probably requies UART driver with interrupts.
+    //       presently read returns immediately -1 (0xff) when no data is available
+    //       0xff happens to be the "list request" char in simpleRPC.
+
+    // https: //github.com/espressif/esp-idf/blob/master/components/vfs/README.rst
+    _GLOBAL_REENT->_stdout = fopen("/dev/uart/0", "wb");
+    _GLOBAL_REENT->_stderr = _GLOBAL_REENT->_stderr;
+
     for (;;)
     {
-        ESP_LOGV(TAG, "interface ...");
         try
         {
             interface(
                 // test
-                //string_test1, F("string_test1"),
-                //string_test2, F("string_test2"),
-                //throw_test, F("throw_test"),
+                float_test, F("float_test"),
+                newline, F("newline"),
+                inc, F("inc"),
+                nothing, F("nothing"),
+                string_test, F("string_test"),
+                throw_test, F("throw_test"),
+                unlock, F("unlock"),
+                lock, F("lock"),
+                lock_test, F("lock_test"),
                 // wifi
                 pack(&network, &Network::connect), F("wifi_connect"),
                 pack(&network, &Network::is_connected), F("wifi_connected"),
@@ -38,16 +63,16 @@ void rpc_task(void *pvParameter)
         catch (const char *error)
         {
             ESP_LOGE(TAG, "Error in interface: %s [%d]", error, strlen(error));
+            // TODO: Acquire LOCK!
             putc(RPC_EXCEPTION, stdout);
             printf(error);
             putc('\n', stdout);
         }
         catch (...)
         {
-            ESP_LOGE(TAG, "Unknown error type in interface");
+            ESP_LOGE(TAG, "Unhandled Exception in rpc_task");
         }
-
-        // feed the wdt?
-        vTaskDelay(10);
+        // without watchdog errors from IDLE1 task
+        vTaskDelay(1);
     }
 }

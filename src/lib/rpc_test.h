@@ -2,6 +2,11 @@
 
 #include "Arduino.h"
 
-String string_test1(String &a) { return a; }
-String string_test2(String a) { return a; }
-int throw_test() { throw "throw test!"; }
+String string_test(String &a);
+String newline(String &a);
+int throw_test();
+float float_test(float);
+
+bool lock(int timeout);
+bool unlock();
+int lock_test(int timeout);

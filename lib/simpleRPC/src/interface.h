@@ -15,7 +15,6 @@
 #include "rpcCall.h"
 #include "signature.h"
 
-
 /**
  * Write the signature and documentation of a function to serial.
  *
@@ -84,7 +83,6 @@ void _select(byte number, byte depth, F f, D, Args... args) {
   }
   _select(number, depth + 1, args...);
 }
-
 
 /**
  * RPC interface.

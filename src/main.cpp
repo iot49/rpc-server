@@ -1,12 +1,13 @@
 #include "sdkconfig.h" 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_log.h"
-// #include "esp_err.h"
 #include "driver/uart.h"
 #include "nvs_flash.h"
 
 #include "message_types.h"
+#include "lib/locks.h"
 #include "lib/error.h"
 #include "lib/rpc_task.h"
 #include "lib/blink_task.h"
@@ -22,13 +23,19 @@ static const char *TAG = "main";
 #define RTS GPIO_NUM_18
 #define CTS GPIO_NUM_19
 
-// mark log messages
+// log messages: acquire tx lock and send type 
 int _log_vprintf(const char *fmt, va_list args)
 {
+    //Lock tx("tx", tx_lock);
+    int res = 0;
+    xSemaphoreTake(tx_lock, tx_timeout);
     putc(LOG_MESSAGE, stdout);
-    return vprintf(fmt, args);
+    res = vprintf(fmt, args);
+    xSemaphoreGive(tx_lock);
+    return res;
 }
 
+// https://github.com/platformio/platform-espressif32/pull/193
 
 extern "C" void app_main()
 {
@@ -43,7 +50,7 @@ extern "C" void app_main()
     uart_set_baudrate(UART_NUM_0, 921600);
 
     // sync message (for RPC-Client)
-    printf("\n\nRPC-Server V1\n");
+    printf("\n\nGRPC-Server V1\n");
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();

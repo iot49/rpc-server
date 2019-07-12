@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <Wstring.h>
+#include <driver/uart.h>
 
 
 class HardwareSerial
@@ -21,20 +22,22 @@ public:
         return getc(stdin);
     }
 
+    inline size_t write(const uint8_t *buffer, size_t size)
+    {
+        // https://github.com/espressif/esp-idf/blob/master/components/vfs/README.rst
+        //return uart_write_bytes(UART_NUM_0, (const char*)buffer, size);
+        return fwrite(buffer, sizeof(uint8_t), size, stdout);
+    }
+
+    inline size_t write(const char *s)
+    {
+        return write((uint8_t *)s, strlen(s));
+    }
+
     inline size_t write(uint8_t c)
     {
         fputc(c, stdout);
         return 1;
-    }
-
-    inline size_t write(const uint8_t *buffer, size_t size)
-    {
-        return fwrite(buffer, sizeof(uint8_t), size, stdout);
-    }
-
-    inline size_t write(const char * s)
-    {
-        return write((uint8_t*) s, strlen(s));
     }
 
     inline size_t write(unsigned long n)
