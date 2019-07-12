@@ -3,6 +3,38 @@
 #include "esp_log.h"
 
 #include "rpc_test.h"
+#include "uart_task.h"
+
+
+Uart *uart = NULL;
+
+void uart_init(int baudrate, int timeout, size_t n_rx, size_t n_tx, uint8_t threshold)
+{
+    if (!uart) 
+    {
+        uart = new Uart(UART_NUM_1, timeout);
+        uart->init(baudrate, n_rx, n_tx, threshold);
+    }
+}
+
+int uart_in_waiting()
+{
+    return (int)(uart->in_waiting());
+}
+
+Vector<uint8_t> read(int sz)
+{
+    uint8_t buffer[sz];
+    int n = uart->read(buffer, sz);
+    Vector<uint8_t> res = Vector<uint8_t>(n);
+    for (int i=0;  i<n;  i++) res[i] = buffer[i];
+    return res;
+}
+
+int write(Vector<uint8_t> &data)
+{
+    return uart->write(data.data(), data.size);
+}
 
 String string_test(String &a) { return a; }
 int throw_test() { throw "throw test!"; }

@@ -16,13 +16,6 @@
 static const char *TAG = "main";
 
 
-// #define TX  GPIO_NUM_17
-// #define RX  GPIO_NUM_16
-#define TX  GPIO_NUM_1
-#define RX  GPIO_NUM_3
-#define RTS GPIO_NUM_18
-#define CTS GPIO_NUM_19
-
 // log messages: acquire tx lock and send type 
 int _log_vprintf(const char *fmt, va_list args)
 {
@@ -45,9 +38,11 @@ extern "C" void app_main()
 
     // configure uart for hardware flow control & change baudrate
     vTaskDelay(100 / portTICK_PERIOD_MS);   // needed ... for whatever reason
+    /* 
     uart_set_hw_flow_ctrl(UART_NUM_0, UART_HW_FLOWCTRL_CTS_RTS, 122);
     uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, RTS, CTS);
     uart_set_baudrate(UART_NUM_0, 921600);
+    */
 
     // sync message (for RPC-Client)
     printf("\n\nGRPC-Server V1\n");

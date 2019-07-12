@@ -40,6 +40,11 @@ void rpc_task(void *pvParameter)
         try
         {
             interface(
+                // uart
+                uart_init, F("uart_init"),
+                uart_in_waiting, F("uart_in_waiting"),
+                read, F("read"),
+                write, F("write"),
                 // test
                 float_test, F("float_test"),
                 newline, F("newline"),
