@@ -19,6 +19,8 @@ static const char *TAG = "main";
 // log messages: acquire tx lock and send type 
 int _log_vprintf(const char *fmt, va_list args)
 {
+    // vsnprintf
+    // https://github.com/espressif/esp-idf/issues/464
     //Lock tx("tx", tx_lock);
     int res = 0;
     xSemaphoreTake(tx_lock, tx_timeout);

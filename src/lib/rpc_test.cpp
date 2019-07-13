@@ -8,18 +8,28 @@
 
 Uart *uart = NULL;
 
-void uart_init(int baudrate, int timeout, size_t n_rx, size_t n_tx, uint8_t threshold)
+void uart_init(int baudrate, int timeout, size_t rx_buffer_size, size_t tx_buffer_size)
 {
     if (!uart) 
     {
         uart = new Uart(UART_NUM_1, timeout);
-        uart->init(baudrate, n_rx, n_tx, threshold);
+        uart->init(baudrate, rx_buffer_size, tx_buffer_size);
     }
 }
 
 int uart_in_waiting()
 {
     return (int)(uart->in_waiting());
+}
+
+int uart_events_waiting()
+{
+    return uart->events_waiting();
+}
+
+int uart_next_event()
+{
+    return uart->next_event();
 }
 
 Vector<uint8_t> read(int sz)

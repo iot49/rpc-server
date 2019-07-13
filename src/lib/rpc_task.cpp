@@ -43,6 +43,8 @@ void rpc_task(void *pvParameter)
                 // uart
                 uart_init, F("uart_init"),
                 uart_in_waiting, F("uart_in_waiting"),
+                uart_events_waiting, F("uart_events_waiting"),
+                uart_next_event, F("uart_next_event"),
                 read, F("read"),
                 write, F("write"),
                 // test

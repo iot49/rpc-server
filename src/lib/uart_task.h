@@ -17,11 +17,12 @@ public:
     Uart(uart_port_t uart_num, int timeout_ms) : port{uart_num}, timeout_ms{timeout_ms} {};
 
     // rx_buffer_size > 128!
-    void init(int baud_rate, 
-        size_t rx_buffer_size=256, size_t tx_buffer_size=0, uint8_t threshold=122,
-        gpio_num_t tx = TX, gpio_num_t rx = RX, gpio_num_t rts = RTS, gpio_num_t cts = CTS);
+    void init(int baud_rate, size_t rx_buffer_size = 1024, size_t tx_buffer_size = 0,
+              gpio_num_t tx = TX, gpio_num_t rx = RX, gpio_num_t rts = RTS, gpio_num_t cts = CTS);
 
     size_t in_waiting();
+    int events_waiting();
+    int next_event();
 
     int read(uint8_t *buf, size_t len);
     uint8_t read();
@@ -32,4 +33,5 @@ public:
 protected:
     uart_port_t port;
     int timeout_ms;
+    QueueHandle_t uart_queue;
 };
