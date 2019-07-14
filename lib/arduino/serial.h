@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <Wstring.h>
-#include <driver/uart.h>
+#include "lib/uart.h"
+
+
+extern Uart uart;
 
 
 class HardwareSerial
@@ -19,25 +22,22 @@ public:
 
     inline int read(void)
     {
-        return getc(stdin);
+        return uart.read();
     }
 
     inline size_t write(const uint8_t *buffer, size_t size)
     {
-        // https://github.com/espressif/esp-idf/blob/master/components/vfs/README.rst
-        //return uart_write_bytes(UART_NUM_0, (const char*)buffer, size);
-        return fwrite(buffer, sizeof(uint8_t), size, stdout);
+        return uart.write(buffer, size);
     }
 
     inline size_t write(const char *s)
     {
-        return write((uint8_t *)s, strlen(s));
+        return uart.write(s);
     }
 
     inline size_t write(uint8_t c)
     {
-        fputc(c, stdout);
-        return 1;
+        return uart.write(c);
     }
 
     inline size_t write(unsigned long n)

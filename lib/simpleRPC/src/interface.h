@@ -1,6 +1,9 @@
 #ifndef __SIMPLE_RPC_INTERFACE_TCC__
 #define __SIMPLE_RPC_INTERFACE_TCC__
 
+#include "esp_log.h"
+#include "lib/uart.h"
+
 /*
  * Template library for exporting native C functions as remote procedure calls.
  *
@@ -98,16 +101,20 @@ void _select(byte number, byte depth, F f, D, Args... args) {
 template<class... Args>
 void rpcInterface(Args... args) {
   byte command;
-
   if (Serial.available()) {
     command = Serial.read();
+    // ESP_LOGI("interface", "command = %d", (int)command);
 
     if (command == _LIST_REQ) {
-      multiPrint(RPC_PROTOCOL, _PROTOCOL, _END_OF_STRING);
-      multiPrint(_VERSION[0], _VERSION[1], _VERSION[2]);
-      multiPrint(_hardwareDefs().c_str(), _END_OF_STRING);
-      _describe(args...);
-      multiPrint(_END_OF_STRING); // Empty string marks end of list.
+      uart.lock();
+      {
+        multiPrint(RPC_PROTOCOL, _PROTOCOL, _END_OF_STRING);
+        multiPrint(_VERSION[0], _VERSION[1], _VERSION[2]);
+        multiPrint(_hardwareDefs().c_str(), _END_OF_STRING);
+        _describe(args...);
+        multiPrint(_END_OF_STRING); // Empty string marks end of list.
+      }
+      uart.unlock();
       return;
     }
     _select(command, 0, args...);

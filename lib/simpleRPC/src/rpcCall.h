@@ -1,9 +1,8 @@
 #ifndef __SIMPLE_RPC_RPCCALL_TCC__
 #define __SIMPLE_RPC_RPCCALL_TCC__
 
-#include "freertos/semphr.h"
-#include "message_types.h"
-#include "lib/locks.h"
+#include "settings.h"
+#include "lib/uart.h"
 
 #include "read.h"
 #include "tuple.h"
@@ -27,11 +26,12 @@ void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
 
   {
-    //Lock tx("tx", tx_lock);
-    xSemaphoreTake(tx_lock, tx_timeout);
-    Serial.write(RPC_RESPONSE); // indicate function result
-    _write(&data);
-    xSemaphoreGive(tx_lock);
+    uart.lock();
+    {
+        Serial.write(RPC_RESPONSE); // indicate function result
+        _write(&data);
+    }
+    uart.unlock();
   }
 }
 
@@ -47,11 +47,12 @@ void _call(void (*)(void), Tuple <C *, R (P::*)(Tail...)>t, Args&... args) {
   R data =(*t.head.*t.tail.head)(args...);
 
   {
-      //Lock tx("tx", tx_lock);
-      xSemaphoreTake(tx_lock, tx_timeout);
-      Serial.write(RPC_RESPONSE); // indicate function result
-      _write(&data);
-      xSemaphoreGive(tx_lock);
+    uart.lock();
+    {
+        Serial.write(RPC_RESPONSE); // indicate function result
+        _write(&data);
+    }
+    uart.unlock();
   }
 }
 

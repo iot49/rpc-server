@@ -1,11 +1,15 @@
-#include "uart_task.h"
+#include "uart.h"
 #include "error.h"
+#include "esp_log.h"
 #include <stdint.h>
+#include <string.h>
 #include <driver/gpio.h>
 #include <driver/uart.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 
-static const char* TAG = "uart-task";
+static const char* TAG = "connect-uart";
 
 void Uart::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size,
                 gpio_num_t tx, gpio_num_t rx, gpio_num_t rts, gpio_num_t cts)
@@ -54,12 +58,21 @@ uint8_t Uart::read()
 // returns number of bytes written or -1 for error
 int Uart::write(const uint8_t *data, size_t len)
 {
-    return uart_tx_chars(port, (const char *)data, len);
+    if (!locked()) {
+        const char *distress = "H***** uart - write without lock\n";
+        uart_write_bytes(port, distress, strlen(distress));
+    }
+    return uart_write_bytes(port, (const char *)data, len);
 }
 
 int Uart::write(uint8_t byte)
 {
     return write(&byte, 1);
+}
+
+int Uart::write(const char* str)
+{
+    return write((uint8_t*)str, strlen(str));
 }
 
 int Uart::events_waiting()

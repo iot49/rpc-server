@@ -10,4 +10,5 @@
 .gitmodules
 .envrc
 .direnv
+test/
 OLD/

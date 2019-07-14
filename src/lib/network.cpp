@@ -22,6 +22,10 @@
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
+#include "mdns.h"
+#include "esp_ota_ops.h"
+#include "esp_http_client.h"
+#include "esp_https_ota.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -44,7 +48,7 @@ static void start_sntp()
     xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
     ESP_LOGI(TAG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org");
+    sntp_setservername(0, (char*)"pool.ntp.org");
     sntp_init();
 }
 
@@ -107,7 +111,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-void Network::connect(String ssid, String password)
+void Network::connect(String &ssid, String &password)
 {
     if (sta_initialized) {
         ESP_LOGI(TAG, "call connect only once (ignored)");
@@ -146,4 +150,76 @@ int Network::epoch()
     time_t now;
     time(&now);
     return now;
+}
+
+void Network::mdns(String &hostname, String &friendly_name)
+{
+    err_check_throw(mdns_init());
+    err_check_throw(mdns_hostname_set(hostname.c_str()));
+    err_check_throw(mdns_instance_name_set(friendly_name.c_str()));
+}
+
+// e.g. _http, _tcp, 80
+void Network::mdns_service(String &type, String &proto, int port)
+{
+    err_check_throw(mdns_service_add(NULL, type.c_str(), proto.c_str(), port, NULL, 0));
+}
+
+
+esp_err_t _http_event_handler(esp_http_client_event_t *evt)
+{
+    switch (evt->event_id) {
+    case HTTP_EVENT_ERROR:
+        ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+        break;
+    case HTTP_EVENT_ON_CONNECTED:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+        break;
+    case HTTP_EVENT_HEADER_SENT:
+        ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+        break;
+    case HTTP_EVENT_ON_HEADER:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+        break;
+    case HTTP_EVENT_ON_DATA:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+        break;
+    case HTTP_EVENT_ON_FINISH:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
+        break;
+    case HTTP_EVENT_DISCONNECTED:
+        ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
+        break;
+    }
+    return ESP_OK;
+}
+
+
+void Network::ota(String &url, String &cert_pem, bool skip_cert_check) 
+{
+    ESP_LOGI(TAG, "OTA ...");
+    esp_http_client_config_t config = {};
+    config.event_handler = _http_event_handler,
+    config.url = url.c_str();
+    config.cert_pem = cert_pem.c_str();
+    // config.skip_cert_common_name_check(skip_cert_check);
+    // ota ...
+    ESP_LOGI(TAG, "starting upload from %s", url.c_str());
+    esp_err_t ret = esp_https_ota(&config);
+    ESP_LOGI(TAG, "esp_err_t %d", ret);
+    if (ret == ESP_OK) {
+        esp_restart();
+    } else {
+        throw "Firmware upgrade failed";
+    }
+    while (true) {
+        vTaskDelay(1000);
+    }
+}
+
+
+void Network::ota_invalid() 
+{
+    throw "not implemented";
+    // err_check_log(TAG, esp_ota_mark_app_invalid_rollback_and_reboot());
 }

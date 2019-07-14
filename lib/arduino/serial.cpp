@@ -1,30 +1,22 @@
 #include <serial.h>
 
 
+size_t in_waiting();
+int events_waiting();
+int next_event();
+
+int read(uint8_t *buf, size_t len);
+uint8_t read();
+
 size_t HardwareSerial::available(void)
 {
-    int c = getc(stdin);
-    if (c == EOF) {
-        return 0;
-    } else {
-        ungetc(c, stdin);
-        return 1;
-    }
+    return uart.in_waiting();
 }
 
 
 size_t HardwareSerial::readBytes(char *buffer, size_t length)
 {
-    size_t count = 0;
-    while (count < length) {
-        int c = read();
-        if(c < 0) {
-            break;
-        }
-        *buffer++ = (char)c;
-        count++;
-    }
-    return count;
+    return uart.read((uint8_t*)buffer, length);
 }
 
 

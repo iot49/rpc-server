@@ -3,12 +3,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_log.h"
+#include "locks.h"
+
+/********************************************************************************
+ *** CRASHES ESP32! ***
+ ********************************************************************************/
 
 /* Usage:
-   NOTE: Clever, but unfortunately crashes the ESP32!
-
         {
-            Lock tx("tx", tx_lock);
+            Lock tx("tx", uart.tx_lock());
             // ... access resource (e.g. UART transmitter)
 
             // resource is automatically released when tx
@@ -16,8 +19,6 @@
         }
  */
 
-// UART transmitter to host
-extern SemaphoreHandle_t tx_lock;
 extern TickType_t tx_timeout;
 
 class Lock
