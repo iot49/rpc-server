@@ -1,3 +1,4 @@
+#include "settings.h"
 #include "sdkconfig.h" 
 #include "esp_log.h"
 #include "lib/init_rpc.h"

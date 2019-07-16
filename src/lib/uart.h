@@ -1,10 +1,11 @@
 #pragma once
 
+#include "settings.h"
+#include "locks.h"
 #include <stdint.h>
 #include <driver/gpio.h>
 #include <driver/uart.h>
 #include "freertos/semphr.h"
-#include "locks.h"
 
 // #define TX GPIO_NUM_1
 // #define RX GPIO_NUM_3
@@ -16,30 +17,29 @@
 class Uart
 {
 public:
-    Uart(uart_port_t uart_num, int timeout_ms) : port{uart_num}, timeout_ms{timeout_ms} {};
+    Uart(uart_port_t uart_num, int timeout_ms) : port{uart_num}
+    {
+        timeout_ticks = pdMS_TO_TICKS(timeout_ms);
+    }
 
-    // rx_buffer_size > 128!
-    void init(int baud_rate, size_t rx_buffer_size = 1024, size_t tx_buffer_size = 0,
+    // _x_buffer_size > 128!
+    void init(int baud_rate, size_t rx_buffer_size = 1024, size_t tx_buffer_size = 1024,
               gpio_num_t tx = TX, gpio_num_t rx = RX, gpio_num_t rts = RTS, gpio_num_t cts = CTS);
 
-    inline bool lock() { return xSemaphoreTake(tx_lock, (TickType_t)5000); }
-    inline bool unlock() { return xSemaphoreGive(tx_lock); }
+    inline SemaphoreHandle_t& lock() { return tx_lock; }
     inline bool locked() { return uxSemaphoreGetCount(tx_lock) == 0; }
 
     size_t in_waiting();
-    int events_waiting();
-    int next_event();
 
-    int read(uint8_t *buf, size_t len);
-    uint8_t read();
+    int read(uint8_t *buf, size_t len);           // number of chars read
+    int read();                                   // char or -1 if timeout
 
-    int write(const uint8_t *data, size_t len);
+    int write(const uint8_t *data, size_t len);   // bytes written or -1 if timeout
     int write(uint8_t byte);
     int write(const char *string);
 
-protected:
+protected : 
     uart_port_t port;
-    int timeout_ms;
-    QueueHandle_t uart_queue;
-    SemaphoreHandle_t tx_lock = xSemaphoreCreateMutex();
+    TickType_t timeout_ticks;
+    SemaphoreHandle_t tx_lock = xSemaphoreCreateRecursiveMutex();
 };

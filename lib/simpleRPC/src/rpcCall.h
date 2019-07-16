@@ -26,12 +26,9 @@ void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
 
   {
-    uart.lock();
-    {
-        Serial.write(RPC_RESPONSE); // indicate function result
-        _write(&data);
-    }
-    uart.unlock();
+    Lock lock("uart", uart.lock());
+    Serial.write(RPC_RESPONSE); // indicate function result
+    _write(&data);
   }
 }
 
@@ -47,12 +44,9 @@ void _call(void (*)(void), Tuple <C *, R (P::*)(Tail...)>t, Args&... args) {
   R data =(*t.head.*t.tail.head)(args...);
 
   {
-    uart.lock();
-    {
-        Serial.write(RPC_RESPONSE); // indicate function result
-        _write(&data);
-    }
-    uart.unlock();
+    Lock lock("uart", uart.lock());
+    Serial.write(RPC_RESPONSE); // indicate function result
+    _write(&data);
   }
 }
 

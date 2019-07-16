@@ -1,14 +1,9 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+#pragma once
+
+#include <stdint.h>
 #include "Arduino.h"
 
-
-uint32_t getHeapSize() {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.total_free_bytes + info.total_allocated_bytes;
-}
+uint32_t getHeapSize();
 
 /* log levels:
         0  NONE
@@ -18,7 +13,11 @@ uint32_t getHeapSize() {
         4  DEBUG
         5  VERBOSE
  */
-void setLogLevel(String tag, int level)
-{
-    esp_log_level_set(tag.c_str(), (esp_log_level_t)level);
-}
+void setLogLevel(String tag, int level);
+
+String task_list();
+
+int delay_ms(int ms);
+
+void reset();
+String reset_reason();

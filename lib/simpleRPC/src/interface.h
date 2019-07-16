@@ -100,25 +100,24 @@ void _select(byte number, byte depth, F f, D, Args... args) {
  */
 template<class... Args>
 void rpcInterface(Args... args) {
-  byte command;
-  if (Serial.available()) {
-    command = Serial.read();
-    // ESP_LOGI("interface", "command = %d", (int)command);
+    int command = -1;
+    while (command < 0)
+    {
+        // spins slowly, set by UART_TIMEOUT_MS
+        command = Serial.read();
+    }
 
     if (command == _LIST_REQ) {
-      uart.lock();
-      {
+        Lock lock("uart", uart.lock());
         multiPrint(RPC_PROTOCOL, _PROTOCOL, _END_OF_STRING);
         multiPrint(_VERSION[0], _VERSION[1], _VERSION[2]);
         multiPrint(_hardwareDefs().c_str(), _END_OF_STRING);
         _describe(args...);
         multiPrint(_END_OF_STRING); // Empty string marks end of list.
-      }
-      uart.unlock();
-      return;
+        return;
     }
     _select(command, 0, args...);
-  }
+  
 }
 
 #endif

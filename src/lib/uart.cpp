@@ -1,3 +1,4 @@
+#include "settings.h"
 #include "uart.h"
 #include "error.h"
 #include "esp_log.h"
@@ -31,8 +32,7 @@ void Uart::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size,
 
     err_check_log(TAG, uart_param_config(port, &uart_config));
     err_check_log(TAG, uart_set_pin(port, tx, rx, rts, cts));
-    const int queue_size = 32;
-    err_check_log(TAG, uart_driver_install(port, rx_buffer_size, tx_buffer_size, queue_size, &uart_queue, 0));
+    err_check_log(TAG, uart_driver_install(port, rx_buffer_size, tx_buffer_size, 0, NULL, 0));
 };
 
 size_t Uart::in_waiting()
@@ -45,17 +45,18 @@ size_t Uart::in_waiting()
 // returns number of bytes read or -1 for error
 int Uart::read(uint8_t *buf, size_t len)
 {
-    return uart_read_bytes(port, buf, len, timeout_ms / portTICK_RATE_MS);
+    return uart_read_bytes(port, buf, len, timeout_ticks);
 }
 
-uint8_t Uart::read()
+// returns char or -1 in case of timeout
+int Uart::read()
 {
     uint8_t buf;
-    read(&buf, (size_t)1);
-    return buf;
+    int n = read(&buf, (size_t)1);
+    return n == 1 ? (int)buf : -1;
 }
 
-// returns number of bytes written or -1 for error
+// returns number of bytes written or -1 for error (timeout)
 int Uart::write(const uint8_t *data, size_t len)
 {
     if (!locked()) {
@@ -65,30 +66,14 @@ int Uart::write(const uint8_t *data, size_t len)
     return uart_write_bytes(port, (const char *)data, len);
 }
 
+// returns 1 for success, -1 for error (timeout)
 int Uart::write(uint8_t byte)
 {
     return write(&byte, 1);
 }
 
+// returns number of bytes written or -1 for error (timeout)
 int Uart::write(const char* str)
 {
     return write((uint8_t*)str, strlen(str));
-}
-
-int Uart::events_waiting()
-{
-    return (int)uxQueueMessagesWaiting(uart_queue);
-}
-
-int Uart::next_event()
-{
-    uart_event_t event;
-    if (xQueueReceive(uart_queue, (void *)&event, (portTickType)0))
-    {
-        return event.type;
-    } 
-    else 
-    {
-        return -1;
-    }
 }

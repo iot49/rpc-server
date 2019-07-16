@@ -1,3 +1,9 @@
+#include "settings.h"
+#include "locks.h"
+#include "error.h"
+#include "uart.h"
+#include "rpc_task.h"
+#include "blink_task.h"
 #include "init_rpc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -8,32 +14,21 @@
 #include "nvs_flash.h"
 #include "esp_ota_ops.h"
 
-#include "settings.h"
-#include "locks.h"
-#include "error.h"
-#include "uart.h"
-#include "rpc_task.h"
-#include "blink_task.h"
 
 static const char *TAG = "init_rpc";
 
 // log messages: acquire tx lock and send type
 int _log_vprintf(const char *fmt, va_list args)
 {
-    int result;
-    uart.lock();
-    {
-        uart.write(RPC_LOG_MESSAGE);
-        const int N = 100;
-        char buffer[N];
-        vsnprintf(buffer, N, fmt, args);
-        result = uart.write(buffer);
-    }
-    uart.unlock();
-    return result;
+    Lock lock("uart", uart.lock());
+    uart.write(RPC_LOG_MESSAGE);
+    const int N = 100;
+    char buffer[N];
+    vsnprintf(buffer, N, fmt, args);
+    return uart.write(buffer);
 }
 
-Uart uart(UART_NO, UART_TIMEOUT);
+Uart uart(UART_NO, UART_TIMEOUT_MS);
 
 void init_rpc()
 {
@@ -48,9 +43,8 @@ void init_rpc()
 
     // startup message
     {
-        uart.lock();
+        Lock lock("uart", uart.lock());
         uart.write("\n\nGRPC-Server V1\n");
-        uart.unlock();
     }
 
     // Initialize NVS
@@ -65,9 +59,11 @@ void init_rpc()
 
     // if we made it to here, we assume the ota image is good ...
     ESP_LOGW(TAG, "esp_ota_mark_app_valid_cancel_rollback NOT IMPLEMENTED");
+    ESP_LOGW(TAG, "upgrade esp idf to 3.2.2!");
+    
     // err_check_log(TAG, esp_ota_mark_app_valid_cancel_rollback());
 
     // start blink task (blinks LED on Huzzah32)
-    xTaskCreate(&blink_task, "blink_task", 4096, NULL, 5, NULL);
-    xTaskCreate(&rpc_task, "rpc_task", 4 * 4096, NULL, 5, NULL);
+    xTaskCreate(&blink_task, "blink_task", 3*1024, NULL, 5, NULL);
+    xTaskCreate(&rpc_task,   "rpc_task",  16*1024, NULL, 5, NULL);
 }

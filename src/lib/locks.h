@@ -1,5 +1,6 @@
 #pragma once
 
+#include "settings.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_log.h"
@@ -19,13 +20,11 @@
         }
  */
 
-extern TickType_t tx_timeout;
-
 class Lock
 {
     SemaphoreHandle_t &m_;
 
 public:
-    Lock(const char *lock_name, SemaphoreHandle_t m, int timeout_ms=5000);
+    Lock(const char *lock_name, SemaphoreHandle_t &m, int timeout_ms = 5000);
     ~Lock();
 };

@@ -6,7 +6,7 @@ class Vector {
   public:
     Vector(void) {}
     Vector(size_t);
-    Vector(size_t, T *, bool destroy=true);
+    Vector(size_t, T *, bool destroy = true);
     ~Vector(void);
     void resize(size_t);
     T &operator[](size_t);

@@ -14,7 +14,7 @@ size_t HardwareSerial::available(void)
 }
 
 
-size_t HardwareSerial::readBytes(char *buffer, size_t length)
+size_t HardwareSerial::readBytes(char *buffer, unsigned int length)
 {
     return uart.read((uint8_t*)buffer, length);
 }

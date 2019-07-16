@@ -12,6 +12,7 @@
 
 #include "network.h"
 #include "error.h"
+#include "settings.h"
 
 #include <string.h>
 #include <time.h>
@@ -204,22 +205,28 @@ void Network::ota(String &url, String &cert_pem, bool skip_cert_check)
     config.cert_pem = cert_pem.c_str();
     // config.skip_cert_common_name_check(skip_cert_check);
     // ota ...
-    ESP_LOGI(TAG, "starting upload from %s", url.c_str());
+    ESP_LOGI(TAG, "starting upload from %s ...", url.c_str());
+    vTaskDelay(pdMS_TO_TICKS(1000));
     esp_err_t ret = esp_https_ota(&config);
     ESP_LOGI(TAG, "esp_err_t %d", ret);
     if (ret == ESP_OK) {
+        ESP_LOGI(TAG, "success, rebooting ...");
+        vTaskDelay(pdMS_TO_TICKS(1000));
         esp_restart();
     } else {
+        ESP_LOGI(TAG, "upgrade failed");
+        vTaskDelay(pdMS_TO_TICKS(1000));
         throw "Firmware upgrade failed";
     }
     while (true) {
-        vTaskDelay(1000);
+        ESP_LOGI(TAG, "should never get here (?)");
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
 
 void Network::ota_invalid() 
 {
-    throw "not implemented";
+    throw "not implemented - upgrade esp idf to > 3.2";
     // err_check_log(TAG, esp_ota_mark_app_invalid_rollback_and_reboot());
 }
