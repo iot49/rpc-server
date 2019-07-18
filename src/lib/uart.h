@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <driver/gpio.h>
 #include <driver/uart.h>
+#include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
 // #define TX GPIO_NUM_1

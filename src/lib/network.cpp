@@ -122,7 +122,6 @@ void Network::connect(String &ssid, String &password)
 
     s_wifi_event_group = xEventGroupCreate();
 
-    tcpip_adapter_init();
     err_check_throw(esp_event_loop_init(event_handler, this));
 
     ESP_LOGI(TAG, "Inititalizing WiFi");
@@ -153,8 +152,18 @@ int Network::epoch()
     return now;
 }
 
+String Network::mac_address()
+{
+    uint8_t mac_id[6];
+    err_check_throw(esp_efuse_mac_get_default(mac_id));
+    char esp_mac[20];
+    sprintf(esp_mac, "%02x:%02x:%02x:%02x:%02x:%02x", mac_id[0], mac_id[1], mac_id[2], mac_id[3], mac_id[4], mac_id[5]);
+    return String(esp_mac);
+}
+
 void Network::mdns(String &hostname, String &friendly_name)
 {
+    err_check_throw(esp_event_loop_create_default());
     err_check_throw(mdns_init());
     err_check_throw(mdns_hostname_set(hostname.c_str()));
     err_check_throw(mdns_instance_name_set(friendly_name.c_str()));

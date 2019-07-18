@@ -8,6 +8,7 @@ public:
     void connect(String &ssid, String &password);
     bool is_connected() { return connected; }
     String ip_address() { return ip_addr; }
+    String mac_address();
     String status() { return status_msg; }
     int epoch();
 

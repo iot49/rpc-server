@@ -5,11 +5,14 @@
 #include "esp_log.h"
 #include "Arduino.h"
 
-uint32_t getHeapSize()
+uint32_t heap_size()
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.total_free_bytes + info.total_allocated_bytes;
+    return esp_get_free_heap_size();
+}
+
+uint32_t min_free_heap_size()
+{
+    return esp_get_minimum_free_heap_size();
 }
 
 /* log levels:

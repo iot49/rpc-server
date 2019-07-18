@@ -3,6 +3,7 @@
 
 #include "esp_log.h"
 #include "lib/uart.h"
+#include "lib/rpc_task.h"
 
 /*
  * Template library for exporting native C functions as remote procedure calls.
@@ -107,7 +108,9 @@ void rpcInterface(Args... args) {
         command = Serial.read();
     }
 
-    if (command == _LIST_REQ) {
+    if (command == _LIST_REQ)
+    {
+        // lock uart tx
         Lock lock("uart", uart.lock());
         multiPrint(RPC_PROTOCOL, _PROTOCOL, _END_OF_STRING);
         multiPrint(_VERSION[0], _VERSION[1], _VERSION[2]);
@@ -116,8 +119,18 @@ void rpcInterface(Args... args) {
         multiPrint(_END_OF_STRING); // Empty string marks end of list.
         return;
     }
+
+    if (command == _ASYNC_CALL)
+    {
+        int async_id;
+        _read(&async_id);
+        command = Serial.read();
+        rpc->async_call(async_id, command);
+        ESP_LOGD("simple_rpc", "rpcInterface aid=%d  command=%d", async_id, command);
+    }
+
     _select(command, 0, args...);
-  
+    ESP_LOGD("simple_rpc", "rpcInterface done");
 }
 
 #endif

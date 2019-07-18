@@ -1,67 +1,103 @@
-#include "settings.h"
 #include "rpc_task.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "esp_task_wdt.h"
-
-#include "error.h"
+#include "settings.h"
 #include "locks.h"
-#include "simpleRPC.h"
 #include "network.h"
+#include "sock.h"
+#include "init_rpc.h"
 #include "rpc_misc.h"
 #include "test_code.h"
+#include "simpleRPC.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "esp_log.h"
 
-static const char *TAG = "rpc";
+class RPC;
 
-Network network;
+// the statics are shared between all threads
+static const char *TAG = "rpc-task";
+static const SemaphoreHandle_t rpc_lock = xSemaphoreCreateRecursiveMutex();
+static Network network;
 
-void rpc_task(void *pvParameter)
+// per thread pointer to RPC instance
+__thread RPC *rpc;
+
+int handler_id()
 {
-    ESP_LOGI(TAG, "rpc_task started ...");
+    return rpc->id();
+}
+
+int rpc_address()
+{
+    return (int)rpc;
+}
+
+void RPC::simpleRPC()
+{
+    interface(
+        // test
+        int_test, F("int_test"),
+        float_test, F("float_test"),
+        string_test, F("string_test"),
+        vec_test, F("vec_test"),
+        vec_test2, F("vec_test2"),
+        tup_test, F("tup_test"),
+        tup_test2, F("tup_test2"), // crashes (heap corrupt)
+        object_test, F("object_test"),
+        throw_test, F("throw_test"),
+        delay_ms, F("delay_ms"),
+        handler_id, F("handler_id"),
+        rpc_address, F("rpc_address"),
+        // wifi
+        pack(&network, &Network::connect), F("wifi_connect"),
+        pack(&network, &Network::is_connected), F("wifi_connected"),
+        pack(&network, &Network::ip_address), F("wifi_ip"),
+        pack(&network, &Network::mac_address), F("wifi_mac"),
+        pack(&network, &Network::status), F("wifi_status"),
+        pack(&network, &Network::epoch), F("epoch"),
+        pack(&network, &Network::mdns), F("mdns"),
+        pack(&network, &Network::mdns_service), F("mdns_service"),
+        pack(&network, &Network::ota), F("ota"),
+        pack(&network, &Network::ota_invalid), F("ota_invalid"),
+        // sockets
+        _getaddrinfo, F("getaddrinfo"),
+        // utilities
+        reset_reason, F("reset_reason"),
+        reset, F("reset"),
+        task_list, F("task_list"),
+        setLogLevel, F("log_level"),
+        min_free_heap_size, F("min_heap_size"),
+        heap_size, F("heap_size"));
+}
+
+void RPC::lock()
+{
+    while (xSemaphoreTakeRecursive(rpc_lock, pdMS_TO_TICKS(100000)) != pdTRUE)
+        ESP_LOGD(TAG, "task %d waiting for lock", id());
+    ESP_LOGD(TAG, "task %d acquired lock", id());
+    has_lock = true;
+}
+
+void RPC::unlock()
+{
+    if (has_lock)
+    {
+        ESP_LOGD(TAG, "task %d releasing lock", id());
+        xSemaphoreGiveRecursive(rpc_lock);
+        has_lock = false;
+    }
+}
+
+void RPC::run_forever()
+{
     for (;;)
     {
+        lock();
         try
         {
-            
-            
-            
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-        
-        {
-            interface(
-                // test
-                int_test, F("int_test"),
-                float_test, F("float_test"),
-                string_test, F("string_test"),
-                vec_test, F("vec_test"),
-                vec_test2, F("vec_test2"),
-                tup_test, F("tup_test"),
-
-
-                tup_test2, F("tup_test2"),  // crashes (heap corrupt)
-                throw_test, F("throw_test"),
-                delay_ms, F("delay_ms"),
-                // wifi
-                pack(&network, &Network::connect), F("wifi_connect"),
-                pack(&network, &Network::is_connected), F("wifi_connected"),
-                pack(&network, &Network::ip_address), F("wifi_ip"),
-                pack(&network, &Network::status), F("wifi_status"),
-                pack(&network, &Network::epoch), F("epoch"),
-                pack(&network, &Network::mdns), F("mdns"),
-                pack(&network, &Network::mdns_service), F("mdns_service"),
-                pack(&network, &Network::ota), F("ota"),
-                pack(&network, &Network::ota_invalid), F("ota_invalid"),
-                // utilities
-                reset_reason, F("reset_reason"),
-                reset, F("reset"),
-                task_list, F("task_list"),
-                setLogLevel, F("log_level"),
-                getHeapSize, F("esp_heap_size"));
+            is_async = false;
+            aid_ = 0;
+            simpleRPC();
         }
         catch (const char *error)
         {
@@ -69,7 +105,15 @@ void rpc_task(void *pvParameter)
             {
                 // we deliberately do not check result
                 Lock lock("uart", uart.lock());
-                uart.write(RPC_EXCEPTION);
+                if (is_async_call())
+                {
+                    uart.write(RPC_ASYNC_EXCEPTION);
+                    uart.write((const uint8_t *)&aid_, 4);
+                }
+                else
+                {
+                    uart.write(RPC_EXCEPTION);
+                }
                 uart.write(error);
                 uart.write('\n');
             }
@@ -78,5 +122,15 @@ void rpc_task(void *pvParameter)
         {
             ESP_LOGE(TAG, "Unhandled Exception in rpc_task");
         }
+        // synchronous rpc calls & exceptions release lock here
+        // async releases in simpleRPC code 
+        unlock();
     }
+}
+
+void rpc_task(void *pvParameter)
+{
+    ESP_LOGI(TAG, "task %2d started ...", *(int *)pvParameter);
+    rpc = new RPC(*(int*)pvParameter);
+    rpc->run_forever();
 }

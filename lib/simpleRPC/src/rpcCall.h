@@ -3,6 +3,8 @@
 
 #include "settings.h"
 #include "lib/uart.h"
+#include "lib/rpc_task.h"
+#include "esp_log.h"
 
 #include "read.h"
 #include "tuple.h"
@@ -23,37 +25,111 @@
  */
 template<class R, class... Tail, class... Args>
 void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
-  R data = f(args...);
+    // release lock if this is an async call
+    bool is_async = rpc->is_async_call();
+    if (is_async) rpc->unlock();
 
-  {
-    Lock lock("uart", uart.lock());
-    Serial.write(RPC_RESPONSE); // indicate function result
-    _write(&data);
-  }
+    // evaluate
+    R data = f(args...);
+
+    // return results
+    {
+        Lock lock("uart", uart.lock());
+        // result type
+        if (is_async)
+        {
+            Serial.write(RPC_ASYNC_RESPONSE);
+            int aid = rpc->async_id();
+            _write(&aid);
+            byte cmd = rpc->command();
+            _write(&cmd);
+        }
+        else
+        {
+            Serial.write(RPC_RESPONSE);
+        }
+        // result
+        _write(&data);
+    }
 }
 
 // Void function.
 template<class... Tail, class... Args>
 void _call(void (*)(void), void (*f)(Tail...), Args&... args) {
-  f(args...);
+    bool is_async = rpc->is_async_call();
+    if (is_async) rpc->unlock();
+
+    // evaluate
+    f(args...);
+
+    // acknowledge
+    {
+        Lock lock("uart", uart.lock());
+        if (is_async) {
+            Serial.write(RPC_ASYNC_VOID_RESPONSE);
+            int aid = rpc->async_id();
+            _write(&aid);
+            uint8_t cmd = rpc->command();
+            _write(&cmd);
+        }
+        else
+        {
+            Serial.write(RPC_VOID_RESPONSE);
+        }
+    }
 }
 
 // Class member function.
 template<class C, class P, class R, class... Tail, class... Args>
 void _call(void (*)(void), Tuple <C *, R (P::*)(Tail...)>t, Args&... args) {
-  R data =(*t.head.*t.tail.head)(args...);
+    // release lock if this is an async call
+    bool is_async = rpc->is_async_call();
+    if (is_async) rpc->unlock();
 
-  {
-    Lock lock("uart", uart.lock());
-    Serial.write(RPC_RESPONSE); // indicate function result
-    _write(&data);
-  }
+    // evaluate
+    R data = (*t.head.*t.tail.head)(args...);
+
+    // send results
+    {
+        Lock lock("uart", uart.lock());
+        // result type
+        if (is_async)
+        {
+            Serial.write(RPC_ASYNC_RESPONSE);
+            int aid = rpc->async_id();
+            _write(&aid);
+            uint8_t cmd = rpc->command();
+            _write(&cmd);
+        }
+        else
+        {
+            Serial.write(RPC_RESPONSE);
+        }
+        // result
+        _write(&data);
+    }
 }
 
 // Void class member function.
 template<class C, class P, class... Tail, class... Args>
 void _call(void (*)(void), Tuple <C *, void (P::*)(Tail...)>t, Args&... args) {
-  (*t.head.*t.tail.head)(args...);
+    bool is_async = rpc->is_async_call();
+    if (is_async) rpc->unlock();
+    // evaluate function
+    (*t.head.*t.tail.head)(args...);
+    // acknowledge
+    {
+        Lock lock("uart", uart.lock());
+        if (is_async) {
+            Serial.write(RPC_ASYNC_VOID_RESPONSE);
+            int aid = rpc->async_id();
+            _write(&aid);
+        }
+        else
+        {
+            Serial.write(RPC_VOID_RESPONSE);
+        }
+    }
 }
 
 /**
@@ -71,19 +147,19 @@ void _call(void (*)(void), Tuple <C *, void (P::*)(Tail...)>t, Args&... args) {
  */
 template<class T, class... Tail, class F, class... Args>
 void _call(void (*f_)(T, Tail...), F f, Args... args) {
-  T data;
+    T data;
 
-  _read(&data);
-  _call((void (*)(Tail...))f_, f, args..., data);
+    _read(&data);
+    _call((void (*)(Tail...))f_, f, args..., data);
 }
 
 // Parameter of type {T &}.
 template<class T, class... Tail, class F, class... Args>
 void _call(void (*f_)(T &, Tail...), F f, Args... args) {
-  T data;
+    T data;
 
-  _read(&data);
-  _call((void (*)(Tail...))f_, f, args..., data);
+    _read(&data);
+    _call((void (*)(Tail...))f_, f, args..., data);
 }
 
 
@@ -99,13 +175,13 @@ void _call(void (*f_)(T &, Tail...), F f, Args... args) {
  */
 template<class R, class... Args>
 void rpcCall(R (*f)(Args...)) {
-  _call((void (*)(Args...))f, f);
+    _call((void (*)(Args...))f, f);
 }
 
 // Class member function.
 template<class C, class P ,class R, class... Args>
 void rpcCall(Tuple <C *, R (P::*)(Args...)>t) {
-  _call((void (*)(Args...))t.tail.head, t);
+    _call((void (*)(Args...))t.tail.head, t);
 }
 
 #pragma GCC diagnostic pop

@@ -39,9 +39,9 @@ Vector<uint8_t> vec_test2(int sz)
     return res;
 }
 
-Object<float, int, bool> tup_test(Object<bool, int, float> &t)
+Object<unsigned char, int, bool> tup_test(Object<bool, int, unsigned char> &t)
 {
-    Object<float, int, bool> res = {get<2>(t), get<1>(t), get<0>(t)};
+    Object<unsigned char, int, bool> res = {get<2>(t), get<1>(t), get<0>(t)};
     return res;
 }
 
@@ -54,4 +54,15 @@ Object<Vector<uint8_t>, Vector<uint8_t>> tup_test2(int sz)
     }
     Object<Vector<uint8_t>, Vector<uint8_t>> res = { v1, v2 };
     return res;
+}
+
+Object<unsigned char, Object<int, unsigned char>> object_test(Object<unsigned char, Object<int, unsigned char>> &o)
+{
+    Object<unsigned char, Object<int, unsigned char>> r;
+
+    get<0>(r) = get<0>(o) + 1;
+    get<0>(get<1>(r)) = get<0>(get<1>(o)) + 1;
+    get<1>(get<1>(r)) = get<1>(get<1>(o)) + 1;
+
+    return r;
 }

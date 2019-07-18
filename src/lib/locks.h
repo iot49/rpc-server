@@ -4,7 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_log.h"
-#include "locks.h"
 
 /********************************************************************************
  *** CRASHES ESP32! ***

@@ -7,5 +7,6 @@
 #define _END_OF_STRING '\0'
 
 #define _LIST_REQ (byte)0xff
+#define _ASYNC_CALL (byte)0xfe
 
 #endif

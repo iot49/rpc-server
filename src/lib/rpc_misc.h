@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include "Arduino.h"
 
-uint32_t getHeapSize();
+uint32_t heap_size();
+uint32_t min_free_heap_size();
 
 /* log levels:
         0  NONE

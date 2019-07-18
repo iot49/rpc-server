@@ -2,6 +2,8 @@
 #include "locks.h"
 #include "error.h"
 #include "uart.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
 #include "rpc_task.h"
 #include "blink_task.h"
 #include "init_rpc.h"
@@ -57,6 +59,9 @@ void init_rpc()
         err_check_log(TAG, nvs_flash_init());
     }
 
+    // initalize tcpip
+    tcpip_adapter_init();
+
     // if we made it to here, we assume the ota image is good ...
     ESP_LOGW(TAG, "esp_ota_mark_app_valid_cancel_rollback NOT IMPLEMENTED");
     ESP_LOGW(TAG, "upgrade esp idf to 3.2.2!");
@@ -65,5 +70,14 @@ void init_rpc()
 
     // start blink task (blinks LED on Huzzah32)
     xTaskCreate(&blink_task, "blink_task", 3*1024, NULL, 5, NULL);
-    xTaskCreate(&rpc_task,   "rpc_task",  16*1024, NULL, 5, NULL);
+
+    for (int i=1;  i<=RPC_TASK_NO;  i++) {
+        char name[16];
+        sprintf(name, "rpc_task %2d", i);
+        int *task_number = new int;
+        *task_number = i;
+        ESP_LOGD(TAG, "creating rpc_task %d", i);
+        xTaskCreate(&rpc_task, name, RPC_TASK_STACK_SIZE, task_number, 5, NULL);
+    }
+
 }
