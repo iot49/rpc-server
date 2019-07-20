@@ -146,7 +146,7 @@ void _call(void (*)(void), Tuple <C *, void (P::*)(Tail...)>t, Args&... args) {
  * @arg {Args...} args... - Parameter pack for {f}.
  */
 template<class T, class... Tail, class F, class... Args>
-void _call(void (*f_)(T, Tail...), F f, Args... args) {
+void _call(void (*f_)(T, Tail...), F f, Args&... args) {
     T data;
 
     _read(&data);
@@ -155,7 +155,7 @@ void _call(void (*f_)(T, Tail...), F f, Args... args) {
 
 // Parameter of type {T &}.
 template<class T, class... Tail, class F, class... Args>
-void _call(void (*f_)(T &, Tail...), F f, Args... args) {
+void _call(void (*f_)(T &, Tail...), F f, Args&... args) {
     T data;
 
     _read(&data);

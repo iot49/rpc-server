@@ -57,10 +57,6 @@ int socket_socket(int domain, int type, int protocol)
 
 int socket_bind(int fd, String &host, String &port)
 {
-    int yes = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) < 0)
-        ESP_LOGI(TAG, "bind.setsocketopt REUSEADDR returns %d %s", errno, strerror(errno));
-    
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
@@ -78,9 +74,9 @@ int socket_bind(int fd, String &host, String &port)
     return 0;
 }
 
-int socket_setsockopt(int fd, int level, int optname, String &value)
+int socket_setsockopt(int fd, int level, int optname, int value)
 {
-    int r = lwip_setsockopt_r(fd, level, optname, value.c_str(), value.length());
+    int r = lwip_setsockopt_r(fd, level, optname, &value, sizeof value);
     if (r != 0) throw strerror(errno);
     return r;
 }
@@ -138,7 +134,6 @@ int sock_sendall(int fd, int timeout_ms, Vector<uint8_t> &data)
     while (sentlen < data.size && xTaskGetTickCount() < stop)
     {
         int r = lwip_send_r(fd, data.data()+sentlen, data.size-sentlen, 0);
-        ESP_LOGI(TAG, "sendall sent %d so far %d, total %d", r, sentlen, data.size);
         if (r < 0 && errno != EWOULDBLOCK) throw strerror(errno);
         if (r > 0) sentlen += r;
     }
@@ -183,7 +178,6 @@ Vector<uint8_t> sock_recv(int fd, int len)
     uint8_t buffer[len];
     int l = lwip_recv_r(fd, buffer, len, 0);
     if (l < 0) throw strerror(errno);
-    ESP_LOGI(TAG, "recv got %d of %d bytes", l, len);
     Vector<uint8_t> res(l);
     for (int i=0;  i<l;  i++) res[i] = buffer[i];
     return res;

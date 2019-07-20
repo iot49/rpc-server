@@ -6,7 +6,7 @@
 
 Object<int, int, int, String, Object<String, String>> socket_getaddrinfo(String &host, String &port, int af, int type, int proto, int flags);
 int socket_socket(int domain, int type, int protocol);
-int socket_setsockopt(int fd, int level, int optname, String &value);
+int socket_setsockopt(int fd, int level, int optname, int value);
 int socket_bind(int fd, String &host, String &port);
 int sock_listen(int fd, int backlog);
 Object<int, Object<String, int>> socket_accept(int fd);
