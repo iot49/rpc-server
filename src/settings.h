@@ -29,7 +29,7 @@
 #define UART_RTS GPIO_NUM_18
 #define UART_CTS GPIO_NUM_19
 
-#define RPC_TASK_NO 4
-#define RPC_TASK_STACK_SIZE (12*1024)
+#define RPC_TASK_NO 1
+#define RPC_TASK_STACK_SIZE (16*1024)
 
 #endif
