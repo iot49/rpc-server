@@ -10,27 +10,33 @@ code_samples = [
 "2**234",
 """
 sum = 0
-for i in range(10):
-    sum += i
-    print('{}^4 = {}'.format(i, i**4))
-print(sum)
+for i in range(5):
+    sum += i*i
+    print('power {:5d}^{} = {}'.format(i, i, i**i))
+print('sum =', sum)
 """,
-"print(5*9)"
+"""
+def foo():
+    print('raise ValueError')
+    raise ValueError('what value?')
+a = 5
+print("3*a =", 3*a)
+foo()
+print('past the error')
+""",
 ]
 
 for code in code_samples:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         s.sendall(code.encode())
-        print("-------------- EVAL {}\n===\n".format(code))
+        print("\n-------------- EVAL {}\n===".format(code))
         while True:
             result = s.recv(1024)
-            if len(result) == 0: 
-                print("\nDONE\n\n\n")
+            if len(result) == 0:
                 break
             try:
                 result = result.decode()
             except:
                 pass
             print(result, end="")
-            # print("got '{}'".format(result))

@@ -4,7 +4,6 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "locks.h"
-#include "init_rpc.h"
 
 
 Lock::Lock(const char *lock_name, SemaphoreHandle_t &m, int timeout_ms) : m_(m)
