@@ -1,6 +1,8 @@
 #include "msgpack.h"
 #include <string.h>
 
+// static const char *TAG = "msgpack";
+
 void MsgPack::pack(int i) {
     if (i > -32 && i < 128)
     {

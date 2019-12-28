@@ -67,17 +67,17 @@ void MsgComm::check_rx()
         uint8_t buf;
         // should never timeout since we read only what we know if in buffer ...
         int n = uart_read_bytes(port, &buf, (size_t)1, timeout_ticks);
-        if (n != 1) throw "check_rx internal error";
+        if (n != 1) throw RPCException("check_rx internal error");
         if (buf == EOT) msg_waiting++;
         rx_buffer->put(buf);
     }
 }
 
-size_t MsgComm::read(uint8_t *buf, size_t len)
+size_t MsgComm::read(void *buf, size_t len)
 {
     check_rx();
     if (messages_waiting() < 1) {
-        throw "message buffer empty";
+        throw RPCException("message buffer empty");
     }
 
     size_t rx_bytes = 0;
@@ -86,12 +86,12 @@ size_t MsgComm::read(uint8_t *buf, size_t len)
     {
         if (b == EOT) {
             msg_waiting--;
-            throw "read past EOT";
+            throw RPCException("read past EOT");
         }
         if (b == ESC) {
             b = getc_() - OFF;
         }
-        buf[rx_bytes] = b;
+        ((uint8_t*)buf)[rx_bytes] = b;
         rx_bytes++;
     }
     return rx_bytes;
@@ -100,7 +100,7 @@ size_t MsgComm::read(uint8_t *buf, size_t len)
 size_t MsgComm::read_eot() {
     check_rx();
     if (messages_waiting() < 1) {
-        throw "message buffer empty";
+        throw RPCException("message buffer empty");
     }
 
     size_t rx_bytes = 0;
@@ -109,24 +109,13 @@ size_t MsgComm::read_eot() {
         uint8_t buf = getc_();
         if (buf == EOT) {
             msg_waiting--;
+            break;
         } else {
             rx_bytes++;
         }
     }
 
     return rx_bytes;
-}
-
-std::string MsgComm::read_string() {
-    // read null-terminated string
-    std::string str;
-    for (;;) {
-        uint8_t buf;
-        read(&buf, 1);
-        if (buf == 0) break;
-        str += (char)buf;
-    }
-    return str;
 }
 
 size_t MsgComm::write(const uint8_t *data, size_t len) {
@@ -146,9 +135,4 @@ size_t MsgComm::write(const uint8_t *data, size_t len) {
 
 void MsgComm::write_eot() {
     putc_(EOT);
-}
-
-size_t MsgComm::write(const char *str)
-{
-    return write((const uint8_t*)str, strlen(str));
 }

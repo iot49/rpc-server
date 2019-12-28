@@ -18,11 +18,14 @@ public:
     inline SemaphoreHandle_t& lock() { return tx_lock; }
     inline bool locked() { return uxSemaphoreGetCount(tx_lock) == 0; }
 
-    // true if at least one message in rx buffer
-    size_t messages_waiting() { return msg_waiting; }
+    // number of messages in rx buffer
+    size_t messages_waiting() { 
+        check_rx();
+        return msg_waiting; 
+    }
 
     // read from rx buffer into buf return actual number of bytes read
-    size_t read(uint8_t *buf, size_t len);
+    size_t read(void *buf, size_t len);
 
     // read past next EOT; return number of bytes read, not counting EOT
     size_t read_eot();
@@ -34,15 +37,6 @@ public:
     // write un-escaped EOT to tx buffer
     // blocking!
     void write_eot();
-
-    //////////////////////////////////////////////////////////////////////
-    // convenience functions
-
-    std::string read_string();
-
-    // write string; return number of bytes written
-    // blocking!
-    size_t write(const char *str);
 
 protected :
     uart_port_t port;

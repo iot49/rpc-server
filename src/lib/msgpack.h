@@ -44,6 +44,11 @@ public:
     }
 
     void pack(int x);
+    void pack(uint8_t x) { pack((int)x); }
+    void pack(int8_t x) { pack((int)x); }
+    void pack(uint16_t x) { pack((int)x); }
+    void pack(int16_t x) { pack((int)x); }
+    void pack(size_t x) { pack((int)x); }
     void pack(float x);
     void pack(double x) { pack((float)x); }
     void pack(bool b);
