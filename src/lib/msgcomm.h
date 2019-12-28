@@ -12,8 +12,10 @@ class MsgComm
 public:
     MsgComm(uart_port_t uart_num = UART_NO, int timeout_ms = UART_TIMEOUT_MS);
 
-    void init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size,
-              gpio_num_t tx, gpio_num_t rx, gpio_num_t rts, gpio_num_t cts);
+    void init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size);
+
+    uint32_t get_baudrate();
+    uint32_t reset_uart(uint32_t baud_rate, size_t rx_buffer_size, size_t tx_buffer_size);
 
     inline SemaphoreHandle_t& lock() { return tx_lock; }
     inline bool locked() { return uxSemaphoreGetCount(tx_lock) == 0; }

@@ -1,4 +1,5 @@
 #include "msgcomm.h"
+#include "settings.h"
 #include "error.h"
 #include <stdint.h>
 #include <string.h>
@@ -20,9 +21,7 @@ MsgComm::MsgComm(uart_port_t uart_num, int timeout_ms) : port{uart_num}
     timeout_ticks = pdMS_TO_TICKS(timeout_ms);
 }
 
-void MsgComm::init(int baud_rate,
-          size_t rx_buffer_size, size_t tx_buffer_size,
-          gpio_num_t tx, gpio_num_t rx, gpio_num_t rts, gpio_num_t cts)
+void MsgComm::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
 {
     uart_config_t uart_config = {
         .baud_rate = 9600,  // actual value set below
@@ -40,7 +39,8 @@ void MsgComm::init(int baud_rate,
         tx_buffer_size = 129;
 
     err_check_log(TAG, uart_param_config(port, &uart_config));
-    err_check_log(TAG, uart_set_pin(port, tx, rx, rts, cts));
+    err_check_log(TAG, uart_set_pin(port, UART_TX, UART_RX, UART_RTS, UART_CTS));
+    // tx, rx, rts, cts));
 
     /* Double buffering:
       We need a count of EOT's in the RX buffer.
@@ -55,6 +55,22 @@ void MsgComm::init(int baud_rate,
     rx_buffer = new Ringbuf<uint8_t>(rx_buffer_size, 0);
 
     ESP_LOGI(TAG, "initialized");
+}
+
+uint32_t MsgComm::get_baudrate()
+{
+    uint32_t baudrate;
+    uart_get_baudrate(port, &baudrate);
+    return baudrate;
+}
+
+uint32_t MsgComm::reset_uart(uint32_t baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
+{
+    err_check_log(TAG, uart_driver_delete(port));
+    init(baud_rate, rx_buffer_size, tx_buffer_size);
+    // This is not working:
+    // uart_set_baudrate(port, baudrate);
+    return baud_rate;
 }
 
 // transfer from driver rx buffer to rx_buffer

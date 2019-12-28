@@ -21,9 +21,7 @@ int ___log_vprintf(const char *fmt, va_list args) {
 
 void cpp_main() {
     ESP_LOGI(TAG, "--------------------- cpp_main ----------------------");
-    rpc.init(UART_BAUDRATE,
-             UART_RX_BUFFER_SIZE, UART_TX_BUFFER_SIZE,
-             UART_TX, UART_RX, UART_RTS, UART_CTS);
+    rpc.init(UART_BAUDRATE, UART_RX_BUFFER_SIZE, UART_TX_BUFFER_SIZE);
 
     // tag log messages and route to host
     esp_log_set_vprintf(___log_vprintf);
@@ -39,7 +37,9 @@ void cpp_main() {
             rpc.run(
                 // os
                 version, "version",
+                get_baudrate, "get_baudrate",
                 reset_uart, "reset_uart",
+                heap_info, "heap_info",
                 // test
                 test, "test",
                 echo_int, "echo_int",
@@ -47,8 +47,7 @@ void cpp_main() {
                 echo_str, "echo_str",
                 echo_bool, "echo_bool",
                 echo_bytes, "echo_bytes",
-                echo_v_uint8, "echo_v_uint8"
-            );
+                echo_v_uint8, "echo_v_uint8");
         }
         catch (RPCException re) {
             ESP_LOGE(TAG, "RPCException %s", re.what());

@@ -3,17 +3,23 @@
 // global
 RPC rpc = RPC(MsgPack());
 
-void RPC::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size,
-               gpio_num_t tx, gpio_num_t rx, gpio_num_t rts, gpio_num_t cts)
+void RPC::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
 {
-    msgpack_.init(baud_rate, rx_buffer_size, tx_buffer_size, tx, rx, rts, cts);
+    msgpack_.init(baud_rate, rx_buffer_size, tx_buffer_size);
 }
 
+void RPC::send_response_nil()
+{
+    Lock lk("server", msgpack_.lock());
+    msgpack_.pack(task_id());
+    msgpack_.pack_nil();
+    msgpack_.write_eot();
+}
 
 void RPC::send_log_message(const char *msg)
 {
     Lock lk("server", msgpack_.lock());
-    msgpack_.pack(1);
+    msgpack_.pack(ID_LOG_MESSAGE);
     msgpack_.pack(msg);
     msgpack_.write_eot();
 }

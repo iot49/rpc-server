@@ -15,8 +15,10 @@ class RPC {
 public:
     RPC(MsgPack msgpack) : msgpack_{msgpack} {}
 
-    void init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size,
-              gpio_num_t tx, gpio_num_t rx, gpio_num_t rts, gpio_num_t cts);
+    void init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size);
+
+    // backdoor direct access to msgpack/msgcomm. Use with caution!
+    MsgPack get_msgpack() { return msgpack_; }
 
     // run rpc method, load arguments and send results via MsgPack/MsgComm
     template <class... Args>
@@ -36,6 +38,8 @@ public:
 
     template <typename... Args>
     void send_error(Args... args);
+
+    void send_response_nil();
 
     void send_log_message(const char *msg);
 
