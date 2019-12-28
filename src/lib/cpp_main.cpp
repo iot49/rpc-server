@@ -56,6 +56,6 @@ void cpp_main() {
         catch (...) {
             ESP_LOGE(TAG, "unhandled exception");
         }
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
