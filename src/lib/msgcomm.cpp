@@ -40,14 +40,13 @@ void MsgComm::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
 
     err_check_log(TAG, uart_param_config(port, &uart_config));
     err_check_log(TAG, uart_set_pin(port, UART_TX, UART_RX, UART_RTS, UART_CTS));
-    // tx, rx, rts, cts));
 
     /* Double buffering:
       We need a count of EOT's in the RX buffer.
       I could not get the pattern detector working, so instead we do our "own"
       buffering in rx_buffer.
       So we don't need to deal with interrupts, we still use the buffered driver.
-      The size should be large enough to keep the uart busy.
+      The size should be large enough to keep the uart busy, e.g. 512.
     */
     err_check_log(TAG, uart_driver_install(port, 512, tx_buffer_size, 0, NULL, 0));
 
@@ -64,13 +63,21 @@ uint32_t MsgComm::get_baudrate()
     return baudrate;
 }
 
-uint32_t MsgComm::reset_uart(uint32_t baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
+uint32_t MsgComm::set_baudrate(uint32_t baud_rate)
 {
-    err_check_log(TAG, uart_driver_delete(port));
-    init(baud_rate, rx_buffer_size, tx_buffer_size);
-    // This is not working:
-    // uart_set_baudrate(port, baudrate);
+    ESP_LOGI(TAG, "set_baudrate to %d", baud_rate);
+    uart_set_baudrate(port, baud_rate);
     return baud_rate;
+
+    /*
+    ESP_LOGI(TAG, "uart_driver_delete");
+    err_check_log(TAG, uart_driver_delete(port));
+    ESP_LOGI(TAG, "init baud=%d, rx=%d, tx=%d", baud_rate, (int)rx_buffer_size, (int)tx_buffer_size);
+    init(baud_rate, rx_buffer_size, tx_buffer_size);
+    ESP_LOGI(TAG, "changed baud rate");
+    msg_waiting = 0;
+    return baud_rate;
+    */
 }
 
 // transfer from driver rx buffer to rx_buffer
@@ -86,6 +93,8 @@ void MsgComm::check_rx()
         if (n != 1) throw RPCException("check_rx internal error");
         if (buf == EOT) msg_waiting++;
         rx_buffer->put(buf);
+        // probably not needed
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
@@ -120,8 +129,13 @@ size_t MsgComm::read_eot() {
     }
 
     size_t rx_bytes = 0;
-    while (true) {
-        // we know this won't fail
+
+    // start time in us
+    uint64_t start = esp_timer_get_time();
+
+    // wait for at most 5 ms
+    // (timeout only happens if messages_waiting returns incorrect result)
+    while (esp_timer_get_time()-start < 5000) {        
         uint8_t buf = getc_();
         if (buf == EOT) {
             msg_waiting--;

@@ -15,7 +15,7 @@ public:
     void init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size);
 
     uint32_t get_baudrate();
-    uint32_t reset_uart(uint32_t baud_rate, size_t rx_buffer_size, size_t tx_buffer_size);
+    uint32_t set_baudrate(uint32_t baud_rate);
 
     inline SemaphoreHandle_t& lock() { return tx_lock; }
     inline bool locked() { return uxSemaphoreGetCount(tx_lock) == 0; }

@@ -17,9 +17,10 @@ uint32_t get_baudrate()
     return rpc.get_msgpack().get_baudrate();
 }
 
-uint32_t reset_uart(uint32_t baudrate, size_t rx_buffer_size, size_t tx_buffer_size)
+void set_baudrate(uint32_t baudrate)
 {
-    return rpc.get_msgpack().reset_uart(baudrate, rx_buffer_size, tx_buffer_size);
+    rpc.get_msgpack().set_baudrate(baudrate);
+    // don't send a result
 }
 
 void heap_info()

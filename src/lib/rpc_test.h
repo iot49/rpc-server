@@ -96,3 +96,8 @@ bool echo_bool(bool b)
 {
     return b;
 }
+
+uint32_t get_time_ms()
+{
+    return esp_timer_get_time() / 1000;
+}

@@ -23,7 +23,7 @@ void cpp_main() {
     ESP_LOGI(TAG, "--------------------- cpp_main ----------------------");
     rpc.init(UART_BAUDRATE, UART_RX_BUFFER_SIZE, UART_TX_BUFFER_SIZE);
 
-    // tag log messages and route to host
+    // send log messages to rtc (rather than monitor)
     esp_log_set_vprintf(___log_vprintf);
 
     // logging level
@@ -38,7 +38,7 @@ void cpp_main() {
                 // os
                 version, "version",
                 get_baudrate, "get_baudrate",
-                reset_uart, "reset_uart",
+                set_baudrate, "set_baudrate",
                 heap_info, "heap_info",
                 // test
                 test, "test",
@@ -47,10 +47,14 @@ void cpp_main() {
                 echo_str, "echo_str",
                 echo_bool, "echo_bool",
                 echo_bytes, "echo_bytes",
-                echo_v_uint8, "echo_v_uint8");
+                echo_v_uint8, "echo_v_uint8",
+                get_time_ms, "get_time_ms");
         }
         catch (RPCException re) {
             ESP_LOGE(TAG, "RPCException %s", re.what());
+        }
+        catch (const std::exception &exc) {
+            ESP_LOGE(TAG, "unhandled exception: %s", exc.what());
         }
         catch (...) {
             ESP_LOGE(TAG, "unhandled exception");
