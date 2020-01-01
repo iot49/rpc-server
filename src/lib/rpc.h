@@ -127,6 +127,11 @@ void RPC::_call(void (*f_)(T, Tail...), F f, Args &... args)
 {
     T data;
     _read(&data);
+    // Will the _call _move_ data (e.g. vector, string?)
+    // std::move(data) results in error:
+    // Invalid initialization of non-const reference of type
+    // Perhaps declare vectors as references in callee?
+    // _call((void (*)(Tail...))f_, f, args..., std::move(data));
     _call((void (*)(Tail...))f_, f, args..., data);
 }
 

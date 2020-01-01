@@ -51,7 +51,7 @@ void MsgComm::init(int baud_rate, size_t rx_buffer_size, size_t tx_buffer_size)
     err_check_log(TAG, uart_driver_install(port, 512, tx_buffer_size, 0, NULL, 0));
 
     delete rx_buffer;
-    rx_buffer = new Ringbuf<uint8_t>(rx_buffer_size, 0);
+    rx_buffer = new Ringbuf<uint8_t>(rx_buffer_size, 255);
 
     ESP_LOGI(TAG, "initialized");
 }
@@ -68,8 +68,8 @@ uint32_t MsgComm::set_baudrate(uint32_t baud_rate)
     ESP_LOGI(TAG, "set_baudrate to %d", baud_rate);
     uart_set_baudrate(port, baud_rate);
     return baud_rate;
-
     /*
+    // won't work either
     ESP_LOGI(TAG, "uart_driver_delete");
     err_check_log(TAG, uart_driver_delete(port));
     ESP_LOGI(TAG, "init baud=%d, rx=%d, tx=%d", baud_rate, (int)rx_buffer_size, (int)tx_buffer_size);
@@ -93,8 +93,6 @@ void MsgComm::check_rx()
         if (n != 1) throw RPCException("check_rx internal error");
         if (buf == EOT) msg_waiting++;
         rx_buffer->put(buf);
-        // probably not needed
-        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
@@ -135,7 +133,7 @@ size_t MsgComm::read_eot() {
 
     // wait for at most 5 ms
     // (timeout only happens if messages_waiting returns incorrect result)
-    while (esp_timer_get_time()-start < 5000) {        
+    while (esp_timer_get_time()-start < 5000) {
         uint8_t buf = getc_();
         if (buf == EOT) {
             msg_waiting--;

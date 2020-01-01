@@ -36,7 +36,7 @@ void test(int n)
             break;
         }
         case 4: {
-            uint8_t x = 66;
+            uint8_t x = 0;
             rpc.send_response(_typeof(x));
             break;
         }
@@ -46,15 +46,31 @@ void test(int n)
             break;
         }
         case 6: {
-            int x = -5;
+            int x = 0;
             rpc.send_response(_typeof(x));
             break;
         }
         case 7: {
-            rpc.send_response(bytes{'['});
+            uint8_t u8 = 0;
+            uint16_t u16 = 0;
+            uint32_t u32 = 0;
+            rpc.send_response(
+                "uint8_t:" + _typeof(u8) +
+                " uint16_t:" + _typeof(u16) +
+                " uint32_t:" + _typeof(u32));
             break;
         }
         case 8: {
+            int8_t u8 = 0;
+            int16_t u16 = 0;
+            int32_t u32 = 0;
+            rpc.send_response(
+                "int8_t:" + _typeof(u8) +
+                " int16_t:" + _typeof(u16) +
+                " int32_t:" + _typeof(u32));
+            break;
+        }
+        case 9: {
             float x = 0;
             bytes res{'['};
             auto t = _typeof(x);

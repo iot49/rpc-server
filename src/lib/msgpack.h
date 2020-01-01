@@ -99,7 +99,7 @@ public:
         _pack_map(args...);
     }
 
-protected:
+private:
 
     void write_bytes(uint32_t obj, size_t n_bytes);
     void write_size(uint8_t code, size_t size);
