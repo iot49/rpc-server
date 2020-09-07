@@ -10,6 +10,9 @@
 .gitmodules
 .envrc
 .direnv
+.ipynb_checkpoints/
 test/
 OLD/
 *.bak
+*conflicted copy*
+.DS_Store
